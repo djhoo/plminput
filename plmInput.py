@@ -7,8 +7,9 @@ import pyautogui
 import time
 import psutil
 from pywinauto.findbestmatch import MatchError
-import configparser
+from configparser import ConfigParser, NoOptionError
 import sys
+import chardet
 
 def is_app_running(app_name):
     # 遍历所有正在运行的进程
@@ -46,74 +47,98 @@ except:
     pyautogui.alert("plm找不到，且找不到输出框")
     sys.exit()
 
-# 将输入框设置为焦点
-#print(main_window.print_control_identifiers())
-gongshi = main_window.child_window(title="工时汇报", control_type="Hyperlink")
-# 等待控件加载完成并且处于可用状态
-gongshi.wait('exists enabled', timeout=10)
-gongshi.set_focus()
-# 执行超链接所代表的操作
-gongshi.click_input()
+# 创建一个ConfigParser对象
+config = ConfigParser()
 
-# 获取应用程序中的所有窗口对象
+with open('./config.ini', 'rb') as f:
+    result = chardet.detect(f.read())
+    encoding = result['encoding']
+# 读取INI文件
+config.read('./config.ini', encoding=encoding)
 
-gWindow = main_window.child_window(title='工时汇报',control_type='Window')
-#gWindow.print_control_identifiers()
-#project = gWindow.child_window(title="小时", control_type="Edit")
-project = gWindow.child_window(auto_id="20155", control_type="ComboBox")
-p1 = project.child_window(auto_id="DropDown", control_type="Button")
-# 点击ComboBox控件，打开下拉列表
-p1.click_input()
+# 获取某个section中的某个option的值
+for i in range(1,31):
+    try:
+        value = config.get('content', str(i))
+        result = value.split(',')
+        print('section1中的option1的值:', result[0])
+        print('section1中的option1的值:', result[1])
+        
+    except NoOptionError:
+        print('这个i值没有:', i)
+        continue
+    id = str(i)
+    timelen = result[0]
+    cont = result[1]
 
-# 输入向下箭头键，选择第4个选项
-for i in range(4):
-    pyautogui.press('down')
+    # 将输入框设置为焦点
+    #print(main_window.print_control_identifiers())
+    gongshi = main_window.child_window(title="工时汇报", control_type="Hyperlink")
+    # 等待控件加载完成并且处于可用状态
+    gongshi.wait('exists enabled', timeout=10)
+    gongshi.set_focus()
+    # 执行超链接所代表的操作
+    gongshi.click_input()
 
-# 输入回车键，确定选择
-pyautogui.press('enter')
+    # 获取应用程序中的所有窗口对象
 
-combo_box = gWindow.child_window(auto_id="20156", control_type="ComboBox")
-#edit = combo_box.child_window(auto_id="1001", control_type="Edit")
-#edit = gWindow.child_window(auto_id="1001", control_type="Edit")
-# 等待控件加载完成并且处于可用状态
-edit = combo_box.child_window(auto_id="DropDown", control_type="Button")
+    gWindow = main_window.child_window(title='工时汇报',control_type='Window')
+    #gWindow.print_control_identifiers()
+    #project = gWindow.child_window(title="小时", control_type="Edit")
+    project = gWindow.child_window(auto_id="20155", control_type="ComboBox")
+    p1 = project.child_window(auto_id="DropDown", control_type="Button")
+    # 点击ComboBox控件，打开下拉列表
+    p1.click_input()
 
-edit.click_input()
+    # 输入向下箭头键，选择第2个选项
+    for i in range(2):
+        pyautogui.press('down')
 
-# 输入向下箭头键，选择第4个选项
-for i in range(1):
-    pyautogui.press('down')
+    # 输入回车键，确定选择
+    pyautogui.press('enter')
 
-# 输入回车键，确定选择
-pyautogui.press('enter')
+    combo_box = gWindow.child_window(auto_id="20156", control_type="ComboBox")
+    #edit = combo_box.child_window(auto_id="1001", control_type="Edit")
+    #edit = gWindow.child_window(auto_id="1001", control_type="Edit")
+    # 等待控件加载完成并且处于可用状态
+    edit = combo_box.child_window(auto_id="DropDown", control_type="Button")
 
-#日期
-date_button = gWindow.child_window( auto_id="69273889", control_type="Button")
-date_button.set_focus()
-date_button_rect = date_button.rectangle()
-pyautogui.click(date_button_rect.right-30, date_button_rect.top+10)
-pyautogui.typewrite('17')
+    edit.click_input()
 
-content = gWindow.child_window(auto_id="20159", control_type="Edit")
-content.set_focus()
-# 输入要搜索的项目名称
-content.type_keys('富士康的打印机进行打印确认')
+    # 输入向下箭头键，选择第4个选项
+    for i in range(1):
+        pyautogui.press('down')
 
-#工作时间按
-content = gWindow.child_window(auto_id="20160", control_type="Edit")
-content.set_focus()
-# 输入要搜索的项目名称
-content.type_keys('8')
+    # 输入回车键，确定选择
+    pyautogui.press('enter')
 
-resume = gWindow.child_window(title="提交", auto_id="1", control_type="Button")
-resume.set_focus()
-resume.click()
+    #日期
+    date_button = gWindow.child_window( auto_id="69273889", control_type="Button")
+    date_button.set_focus()
+    date_button_rect = date_button.rectangle()
+    pyautogui.click(date_button_rect.right-30, date_button_rect.top+10)
+    pyautogui.typewrite(id)
+
+    content = gWindow.child_window(auto_id="20159", control_type="Edit")
+    content.set_focus()
+    # 输入要搜索的项目名称
+    content.type_keys(cont)
+
+    #工作时间按
+    content = gWindow.child_window(auto_id="20160", control_type="Edit")
+    content.set_focus()
+    # 输入要搜索的项目名称
+    content.type_keys(timelen)
+
+    resume = gWindow.child_window(title="提交", auto_id="1", control_type="Button")
+    resume.set_focus()
+    resume.click()
 
 
-time.sleep(1)
-pyautogui.press('enter')
-time.sleep(1)
-pyautogui.press('enter')
+    time.sleep(1)
+    pyautogui.press('enter')
+    time.sleep(1)
+    pyautogui.press('enter')
 #resume = gWindow.child_window(title="取消",  control_type="Button")
 #resume.set_focus()
 #resume.click()
